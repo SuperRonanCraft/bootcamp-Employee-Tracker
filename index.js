@@ -34,11 +34,11 @@ prompt([
   //   console.log(answers);
   switch (choiceArray.indexOf(answers.choice)) {
     case 0: //View Departments
-      viewTable("SELECT * FROM department");
+      viewTable("SELECT name FROM department");
       break;
     case 1: //View roles
       viewTable(
-        "SELECT * FROM role LEFT JOIN department ON role.department = department.id"
+        "SELECT title, salary, name AS department_name FROM role JOIN department ON role.department = department.id"
       );
       break;
     case 2: //View Employees
