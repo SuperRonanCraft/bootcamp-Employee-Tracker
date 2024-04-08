@@ -1,5 +1,6 @@
 const { prompt } = require("inquirer");
 const { Pool } = require("pg");
+const cTable = require("console.table");
 
 const pool = new Pool(
   {
@@ -30,11 +31,11 @@ prompt([
     message: "Which would you like to do?",
     choices: choiceArray,
   },
-]).then((answers) => {
+]).then(({ choice }) => {
   //   console.log(answers);
-  switch (choiceArray.indexOf(answers.choice)) {
+  switch (choiceArray.indexOf(choice)) {
     case 0: //View Departments
-      viewTable("SELECT name FROM department");
+      viewTable("SELECT * FROM department");
       break;
     case 1: //View roles
       viewTable(
@@ -62,7 +63,15 @@ function viewTable(queue) {
   });
 }
 
-function addDepartment() {}
+function addDepartment() {
+  prompt([
+    {
+      type: "input",
+      name: "input",
+      message: "What is the name of the new department?",
+    },
+  ]).then(({ input }) => {});
+}
 
 function addEmployee() {}
 

@@ -1,6 +1,6 @@
 DELETE FROM department;
 INSERT INTO department (name)
-VALUES ('IT'), ('HR'), ('QA'), ('Front End');
+VALUES ('Legal'), ('Finance'), ('Quality Assurance'), ('Engineering');
 
 DELETE FROM role;
 INSERT INTO role (title, salary, department) VALUES
@@ -14,14 +14,13 @@ INSERT INTO role (title, salary, department) VALUES
     ('Head Developer', 80000, 4),
     ('Graphic Designer', 80000, 4);
 
-
--- CREATE TABLE employee (
---     id SERIAL PRIMARY KEY,
---     first_name VARCHAR(30) NOT NULL,
---     last_name VARCHAR(30) NOT NULL,
---     role_id INTEGER NOT NULL,
---     manager_id INTEGER,
---     FOREIGN KEY (role_id)
---     REFERENCES role(id)
---     ON DELETE SET NULL
--- );
+DELETE FROM employee;
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES 
+    ('Jake', 'Farm', 2, null),
+    ('Robert', 'France', 1, 1),
+    ('Hans', 'Solo', 3, null),
+    ('Alain', 'Nunez', 4, null),
+    ('Chris', 'Rock', 1, 4),
+    ('Camrin', 'Town', 1, 4),
+    ('Downy', 'K', 1, 4);
