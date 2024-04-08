@@ -1,5 +1,8 @@
+\c postgres;
 DROP DATABASE IF EXISTS employee_db;
 CREATE DATABASE employee_db;
+
+\c employee_db;
 
 CREATE TABLE department (
     id SERIAL PRIMARY KEY,
@@ -26,3 +29,5 @@ CREATE TABLE employee (
     REFERENCES role(id)
     ON DELETE SET NULL
 );
+
+\i seeds.sql;

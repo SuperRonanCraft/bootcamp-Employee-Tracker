@@ -1,4 +1,17 @@
 const { prompt } = require("inquirer");
+const { Pool } = require("pg");
+
+const pool = new Pool(
+  {
+    // TODO: Enter PostgreSQL username
+    user: "postgres",
+    // TODO: Enter PostgreSQL password
+    password: "password",
+    host: "localhost",
+    database: "employee_db",
+  },
+  console.log(`Connected to the employee_db database.`)
+);
 
 const choiceArray = [
   "View all departments",
@@ -18,13 +31,18 @@ prompt([
     choices: choiceArray,
   },
 ]).then((answers) => {
-  console.log(answers);
+  //   console.log(answers);
   switch (choiceArray.indexOf(answers.choice)) {
     case 0: //View Departments
+      viewTable("SELECT * FROM department");
       break;
     case 1: //View roles
+      viewTable(
+        "SELECT * FROM role LEFT JOIN department ON role.department = department.id"
+      );
       break;
     case 2: //View Employees
+      viewTable("SELECT * FROM employee");
       break;
     case 3: //Add department
       break;
@@ -35,4 +53,17 @@ prompt([
     case 6: //Update employee role
       break;
   }
+  pool.end();
 });
+
+function viewTable(queue) {
+  pool.query(queue).then(({ rows }) => {
+    console.table(rows);
+  });
+}
+
+function addDepartment() {}
+
+function addEmployee() {}
+
+function updateEmployeeRole() {}
