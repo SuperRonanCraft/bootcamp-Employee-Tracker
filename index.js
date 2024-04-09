@@ -69,7 +69,6 @@ prompt([
 });
 
 function viewTable(queue) {
-  pool.sync;
   pool.query(queue).then(({ rows }) => {
     console.table(rows);
   });
@@ -95,10 +94,11 @@ function addDepartment() {
 }
 
 async function addRole() {
+  const departments = await getDepartments();
   prompt([
     {
       type: "input",
-      name: "name",
+      name: "role",
       message: "What is the name of the new role?",
     },
     {
@@ -110,16 +110,23 @@ async function addRole() {
       type: "list",
       name: "department",
       message: "Which department does this new role belong to?",
-      choices: await getDepartments(),
+      choices: departments.map((obj) => obj.name),
     },
-  ]).then(({ input }) => {
+  ]).then(({ role, salary, department }) => {
+    const department_id = departments.filter(
+      (obj) => obj.name === department
+    )[0].id;
     pool
-      .query("INSERT INTO department (name) VALUES ($1)", [input])
-      .then((data) => {
-        console.log(`Added new department '${input}'`);
+      .query(
+        "INSERT INTO role (title, salary, department) VALUES ($1, $2, $3)",
+        [role, salary, department_id]
+      )
+      .then(({ rows }) => {
+        console.log(`Added new role '${role}'`);
       })
       .catch((err) => {
-        console.log("Error when adding department!");
+        console.log("Error when adding role!");
+        console.log(err);
       });
   });
 }
@@ -127,3 +134,8 @@ async function addRole() {
 function addEmployee() {}
 
 function updateEmployeeRole() {}
+
+async function getDepartments() {
+  const { rows } = await pool.query("SELECT * FROM department");
+  return rows;
+}
