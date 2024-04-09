@@ -1,12 +1,12 @@
+//Depends
 const { prompt } = require("inquirer");
 const { Pool } = require("pg");
-const cTable = require("console.table");
+const cTable = require("console.table"); //Used to change default console.table UI
 
+//Postgres SQL connection
 const pool = new Pool(
   {
-    // TODO: Enter PostgreSQL username
     user: "postgres",
-    // TODO: Enter PostgreSQL password
     password: "password",
     host: "localhost",
     database: "employee_db",
@@ -14,6 +14,7 @@ const pool = new Pool(
   console.log(`Connected to the employee_db database.`)
 );
 
+//List of choices for app
 const choiceArray = [
   "View all departments",
   "View all roles",
@@ -25,6 +26,7 @@ const choiceArray = [
   "View total budget of each department",
 ];
 
+//App init
 prompt([
   {
     type: "list",
@@ -73,8 +75,11 @@ prompt([
   }
 });
 
+//Functions
+//Query for just viewing DB data
 function viewTable(queue) {
   pool.query(queue).then(({ rows }) => {
+    //Console.table allows to view data in a table format
     console.table(rows);
     pool.end();
   });
@@ -193,6 +198,7 @@ async function addEmployee() {
   });
 }
 
+//Ability to update an employees role
 async function updateEmployeeRole() {
   const roles = await getRoles(); //Grab all roles
   const employees = await getEmployees(); //Grab all employees
@@ -230,6 +236,7 @@ async function updateEmployeeRole() {
   });
 }
 
+//Getting the sum of each departments budget
 async function getSumOfDepartments() {
   const { rows } = await pool.query(`SELECT d.name,
     SUM(r.salary) AS total_budget,
@@ -262,11 +269,14 @@ async function getEmployees() {
 
 //Generate an array of employees from db
 async function getAvailableManagers() {
+  //Grab all employees
   const employees = await getEmployees();
+  //Concat first/last to just NAME for UI sake
   const managers = employees.map(({ first_name, last_name, id }) => ({
     name: `${first_name} ${last_name}`, //Concat first and last to just name key value
     employee_id: id,
   }));
+  //Add NONE to beggining of array
   managers.unshift({ name: "NONE", employee_id: null });
   return managers;
 }
