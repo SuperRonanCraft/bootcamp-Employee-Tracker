@@ -22,6 +22,7 @@ const choiceArray = [
   "Add a role",
   "Add an employee",
   "Update an employee role",
+  "View total budget of each department",
 ];
 
 prompt([
@@ -65,6 +66,9 @@ prompt([
       break;
     case 6: //Update employee role
       updateEmployeeRole();
+      break;
+    case 7: //Sum of budgets
+      getSumOfDepartments();
       break;
   }
 });
@@ -224,6 +228,18 @@ async function updateEmployeeRole() {
         console.log(err);
       });
   });
+}
+
+async function getSumOfDepartments() {
+  const { rows } = await pool.query(`SELECT d.name,
+    SUM(r.salary) AS total_budget,
+    COUNT(e.id) AS employee_count
+    FROM employee e
+    JOIN role r ON e.role_id = r.id
+    LEFT JOIN department d ON d.id = r.department
+    GROUP BY d.name`);
+  console.table(rows);
+  pool.end();
 }
 
 //Grab all roles from db
