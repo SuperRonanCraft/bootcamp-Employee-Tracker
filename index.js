@@ -64,6 +64,7 @@ prompt([
       addEmployee();
       break;
     case 6: //Update employee role
+      updateEmployeeRole();
       break;
   }
 });
@@ -71,9 +72,11 @@ prompt([
 function viewTable(queue) {
   pool.query(queue).then(({ rows }) => {
     console.table(rows);
+    pool.end();
   });
 }
 
+//Adding a department
 function addDepartment() {
   prompt([
     {
@@ -82,10 +85,13 @@ function addDepartment() {
       message: "What is the name of the new department?",
     },
   ]).then(({ input }) => {
+    //Insert new dapartment into sql database
     pool
       .query("INSERT INTO department (name) VALUES ($1)", [input])
       .then((data) => {
+        //Wait of query to finish
         console.log(`Added new department '${input}'`);
+        pool.end();
       })
       .catch((err) => {
         console.log("Error when adding department!");
@@ -93,6 +99,7 @@ function addDepartment() {
   });
 }
 
+//Adding a new role
 async function addRole() {
   const departments = await getDepartments();
   prompt([
@@ -113,6 +120,8 @@ async function addRole() {
       choices: departments.map((obj) => obj.name),
     },
   ]).then(({ role, salary, department }) => {
+    //Deconstruct expected values
+    //Grab the department id via the original objects string value
     const department_id = departments.filter(
       (obj) => obj.name === department
     )[0].id;
@@ -123,6 +132,7 @@ async function addRole() {
       )
       .then(({ rows }) => {
         console.log(`Added new role '${role}'`);
+        pool.end();
       })
       .catch((err) => {
         console.log("Error when adding role!");
@@ -131,11 +141,116 @@ async function addRole() {
   });
 }
 
-function addEmployee() {}
+//Adding a new employee to db
+async function addEmployee() {
+  const roles = await getRoles(); //Grab all roles
+  const managers = await getAvailableManagers(); //Grab all employees
+  prompt([
+    {
+      type: "input",
+      name: "first_name",
+      message: "What this employee's First name?",
+    },
+    {
+      type: "input",
+      name: "last_name",
+      message: "What this employee's Last name?",
+    },
+    {
+      type: "list",
+      name: "role",
+      message: "What this employee's role?",
+      choices: roles.map((obj) => obj.title), //Display only roles titles
+    },
+    {
+      type: "list",
+      name: "manager",
+      message: "What this employee's manager?",
+      choices: managers.map((obj) => obj.name), //Display only employees name
+    },
+  ]).then(({ first_name, last_name, role, manager }) => {
+    const role_id = roles.filter((obj) => obj.title === role)[0].id;
+    const manager_id = managers.filter((obj) => obj.name === manager)[0]
+      .employee_id;
+    // console.log(role_id, manager_id, first_name, last_name, role, manager);
+    pool
+      .query(
+        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)",
+        [first_name, last_name, role_id, manager_id]
+      )
+      .then(({ rows }) => {
+        console.log(`Added new employee '${first_name} ${last_name}'`);
+        pool.end();
+      })
+      .catch((err) => {
+        console.log("Error when adding employee!");
+        console.log(err);
+      });
+  });
+}
 
-function updateEmployeeRole() {}
+async function updateEmployeeRole() {
+  const roles = await getRoles(); //Grab all roles
+  const employees = await getEmployees(); //Grab all employees
+  prompt([
+    {
+      type: "list",
+      name: "employee",
+      message: "Which employee's role do you want to update?",
+      choices: employees.map((obj) => obj.first_name + " " + obj.last_name),
+    },
+    {
+      type: "list",
+      name: "role",
+      message: "Which role do you want to assign to this employee?",
+      choices: roles.map((obj) => obj.title),
+    },
+  ]).then(({ employee, role }) => {
+    const role_id = roles.filter((obj) => obj.title === role)[0].id;
+    const employee_id = employees.filter(
+      (obj) => obj.first_name + " " + obj.last_name === employee
+    )[0].id;
+    pool
+      .query("UPDATE employee SET role_id = $1 WHERE id = $2", [
+        role_id,
+        employee_id,
+      ])
+      .then(({ rows }) => {
+        console.log(`Updated employee '${employee}' role to ${role}`);
+        pool.end();
+      })
+      .catch((err) => {
+        console.log("Error when updating employees role!");
+        console.log(err);
+      });
+  });
+}
 
+//Grab all roles from db
+async function getRoles() {
+  const { rows } = await pool.query("SELECT * FROM role");
+  return rows;
+}
+
+//Grab all departments
 async function getDepartments() {
   const { rows } = await pool.query("SELECT * FROM department");
   return rows;
+}
+
+//Generate an array of employees from db
+async function getEmployees() {
+  const { rows } = await pool.query("SELECT * FROM employee");
+  return rows;
+}
+
+//Generate an array of employees from db
+async function getAvailableManagers() {
+  const employees = await getEmployees();
+  const managers = employees.map(({ first_name, last_name, id }) => ({
+    name: `${first_name} ${last_name}`, //Concat first and last to just name key value
+    employee_id: id,
+  }));
+  managers.unshift({ name: "NONE", employee_id: null });
+  return managers;
 }
